@@ -1,19 +1,15 @@
-# document_loader.py
 import os
 from pathlib import Path
 
-# Для работы с Word документами
+
 try:
     from docx import Document
 except ImportError:
-    print("Установите python-docx: pip install python-docx")
+    print("python-docx не установлен")
     raise
-
+# загружает документ и возвращает его текст, .txt .docx
 def load_document(filepath: str) -> str:
-    """
-    Загружает документ и возвращает его текст.
-    Поддерживает .txt и .docx форматы.
-    """
+
     filepath = Path(filepath)
     
     if not filepath.exists():
@@ -29,20 +25,19 @@ def load_document(filepath: str) -> str:
     else:
         raise ValueError(f"Неподдерживаемый формат файла: {extension}. Используйте .txt или .docx")
 
+# загружаем текстовый файл
 def _load_txt(filepath: Path) -> str:
-    """Загружает текстовый файл"""
     with open(filepath, 'r', encoding='utf-8') as f:
         return f.read()
 
+# Загружает Word документ
 def _load_docx(filepath: Path) -> str:
-    """Загружает Word документ"""
     doc = Document(filepath)
     # Собираем весь текст из документа
     full_text = []
     for paragraph in doc.paragraphs:
         full_text.append(paragraph.text)
-    
-    # Также можем добавить текст из таблиц, если нужно
+
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
