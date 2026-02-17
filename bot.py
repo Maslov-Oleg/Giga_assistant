@@ -113,6 +113,43 @@ async def cmd_help(message: Message):
     
     await message.answer(help_text)
 
+# обработка команды итогово вывода файла
+@dp.message(Command("report"))
+async def make_report(message: Message):
+    if not await is_admin(message):
+        await message.reply("❌ Только администраторы могут сбрасывать историю диалога")
+        return
+
+    status_msg = await message.reply("📊 Начинаю создание отчёта по конференции..."
+                                     "\nЭто может занять некоторое время.")
+    # импорт и инициализация бота суммарайзера
+    from summarizer import Summarizer
+    summa = Summarizer(config.GIGACHAT_SUMMARIZATION_API_KEY)
+    output_filename = "Отчёт_по_конференции.pdf"
+
+    await status_msg.edit_text(
+        f"{status_msg.text}\n"
+        f"🔄 Обрабатываю запрос к GigaChat..."
+    )
+
+    # запуск создания отчёта
+    summa.create_report(config.QUESTION_DOCUMENT_PATH, output_filename)
+
+    # проверка, создался ли файл
+    if os.path.exists(output_filename):
+        with open(output_filename, 'rb') as pdf_file:
+            await message.reply_document(
+                document=pdf_file,
+                caption=f"✅ Отчёт успешно создан!\nФайл: {output_filename}",
+                reply_to_message_id=message.message_id
+            )
+
+        await status_msg.delete()
+        # os.remove(output_filename)
+
+    else:
+        await status_msg.edit_text("❌ Не удалось создать PDF-файл с отчётом")
+
 # обработка текстовых сообщений с проверкой обращений
 @dp.message(lambda message: message.text and not message.text.startswith('/'))
 async def handle_text(message: Message):
